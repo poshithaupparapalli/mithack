@@ -23,7 +23,7 @@ export default function MapPage() {
       <FamilyMap />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] p-4">
-        <div className="pointer-events-auto rounded-2xl border border-line bg-surface/90 p-3.5 shadow-sm backdrop-blur">
+        <div className="glass pointer-events-auto rounded-2xl p-3.5">
           <p className="font-serif text-[1.05rem] leading-tight text-ink">
             One family, two thousand miles
           </p>

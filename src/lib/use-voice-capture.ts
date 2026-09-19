@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Emotion } from "@/lib/types";
 
 /* Minimal shape of the Web Speech API — not in lib.dom, and vendor-prefixed. */
 interface SpeechRecognitionLike extends EventTarget {
@@ -36,6 +37,9 @@ export interface VoiceResult {
   text: string;
   durationSec: number;
   confidence: number;
+  /** What the pipeline heard in it. Colours the orb this becomes. */
+  emotion?: Emotion;
+  intensity?: number;
 }
 
 /**

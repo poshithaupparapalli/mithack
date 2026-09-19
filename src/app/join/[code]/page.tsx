@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { MeshBackdrop } from "@/components/orb/mesh-backdrop";
+import { MemoryOrb } from "@/components/orb/memory-orb";
 import { ELDER_ID, INITIATOR_ID, mockFamily } from "@/lib/mock-data";
 import { useSettings } from "@/lib/settings-context";
 import { cn } from "@/lib/utils";
@@ -32,7 +34,8 @@ export default function JoinPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] pt-[calc(env(safe-area-inset-top,0px)+3rem)]">
+    <main className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] pt-[calc(env(safe-area-inset-top,0px)+3rem)]">
+      <MeshBackdrop />
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
         <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-ember">
           Invitation · {decodeURIComponent(params.code ?? "")}
@@ -55,6 +58,17 @@ export default function JoinPage() {
           <p className="text-sm text-ink-soft">
             {living.length} relatives, {mockFamily.memories.length} stories so far
           </p>
+        </div>
+
+        <div className="mt-5 flex items-center gap-1.5">
+          {mockFamily.memories.slice(0, 6).map((memory, i) => (
+            <MemoryOrb
+              key={memory.id}
+              emotion={memory.emotion}
+              intensity={memory.intensity ?? 0.7}
+              size={22 + (i % 3) * 8}
+            />
+          ))}
         </div>
       </motion.div>
 
@@ -114,8 +128,8 @@ function ChoiceCard({
       className={cn(
         "relative w-full rounded-2xl border p-4 text-left transition-all",
         selected
-          ? "border-ember bg-ember-soft/60 shadow-[0_0_0_1px_var(--color-ember)]"
-          : "border-line bg-surface hover:border-line-strong",
+          ? "border-ember bg-ember-soft/70 shadow-[0_0_0_1px_var(--color-ember)] backdrop-blur-xl"
+          : "border-white/55 bg-surface/50 backdrop-blur-xl hover:border-white/80",
       )}
     >
       <div className="flex items-start gap-3.5">

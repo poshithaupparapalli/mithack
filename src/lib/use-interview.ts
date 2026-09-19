@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useFamily } from "@/lib/family-context";
 import { useSettings } from "@/lib/settings-context";
 import { seedChat } from "@/lib/mock-data";
-import type { ChatMessage, Memory } from "@/lib/types";
+import type { ChatMessage, Emotion, Memory } from "@/lib/types";
 
 /**
  * The AI Interviewer.
@@ -51,7 +51,20 @@ export function useInterview() {
 
   /** Record an answer to the gap currently on the table, then move on. */
   const answer = useCallback(
-    (text: string, kind: "text" | "voice" = "text", durationSec?: number) => {
+    (
+      text: string,
+      {
+        kind = "text",
+        durationSec,
+        emotion,
+        intensity,
+      }: {
+        kind?: "text" | "voice";
+        durationSec?: number;
+        emotion?: Emotion;
+        intensity?: number;
+      } = {},
+    ) => {
       const gap = currentGap;
 
       push({
@@ -75,6 +88,8 @@ export function useInterview() {
           personIds: [gap.subjectPersonId],
           derivedEventIds: gap.relatedEventId ? [gap.relatedEventId] : [],
           status: "ready",
+          emotion,
+          intensity,
         };
         answerGap(gap.id, memory);
       }

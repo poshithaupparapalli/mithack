@@ -216,6 +216,8 @@ const events: Family["events"] = [
     summary: "Born in a house on Calle Tinoco y Palacios that is still standing.",
     sourceMemoryIds: [],
     confidence: 0.72,
+    emotion: "longing",
+    intensity: 0.5,
   },
   {
     id: "e-tomas-born",
@@ -229,6 +231,8 @@ const events: Family["events"] = [
     summary: "The eldest of six. Left school at eleven to work.",
     sourceMemoryIds: ["m-rosa-wedding"],
     confidence: 0.88,
+    emotion: "joy",
+    intensity: 0.5,
   },
   {
     id: "e-rosa-born",
@@ -242,6 +246,8 @@ const events: Family["events"] = [
     summary: "Josefa's only daughter, born during the rains.",
     sourceMemoryIds: [],
     confidence: 0.95,
+    emotion: "joy",
+    intensity: 0.7,
   },
   {
     id: "e-lemon-tree",
@@ -256,6 +262,8 @@ const events: Family["events"] = [
       "Rosa and her cousins slept under it in summer because the house held the heat. She can still describe the sound of the leaves.",
     sourceMemoryIds: ["m-rosa-lemon"],
     confidence: 0.91,
+    emotion: "longing",
+    intensity: 0.85,
   },
   {
     id: "e-rosa-sewing",
@@ -269,6 +277,8 @@ const events: Family["events"] = [
     summary: "Josefa taught her on a treadle machine. Rosa made her own wedding dress nine years later.",
     sourceMemoryIds: ["m-rosa-lemon"],
     confidence: 0.83,
+    emotion: "pride",
+    intensity: 0.7,
   },
   {
     id: "e-wedding",
@@ -282,6 +292,8 @@ const events: Family["events"] = [
     summary: "Married at Santo Domingo with forty people and one photographer who never delivered the photos.",
     sourceMemoryIds: ["m-rosa-wedding"],
     confidence: 0.94,
+    emotion: "love",
+    intensity: 0.95,
   },
   {
     id: "e-leaving",
@@ -296,6 +308,8 @@ const events: Family["events"] = [
       "Rosa and Tomás left with two suitcases and Josefa's address book. The reason has never been written down.",
     sourceMemoryIds: ["m-maya-note"],
     confidence: 0.58,
+    emotion: "grief",
+    intensity: 0.8,
   },
   {
     id: "e-juarez",
@@ -309,6 +323,8 @@ const events: Family["events"] = [
     summary: "They waited on paperwork. Tomás swept a bakery for room and board.",
     sourceMemoryIds: [],
     confidence: 0.49,
+    emotion: "longing",
+    intensity: 0.6,
   },
   {
     id: "e-arrival",
@@ -323,6 +339,8 @@ const events: Family["events"] = [
       "A cousin met them at Union Station. They moved into the second-floor apartment on 19th Place where Rosa still lives.",
     sourceMemoryIds: ["m-rosa-arrival"],
     confidence: 0.9,
+    emotion: "pride",
+    intensity: 0.85,
   },
   {
     id: "e-elena-born",
@@ -336,6 +354,8 @@ const events: Family["events"] = [
     summary: "The first of the family born in the United States.",
     sourceMemoryIds: [],
     confidence: 0.97,
+    emotion: "joy",
+    intensity: 0.9,
   },
   {
     id: "e-steel",
@@ -349,6 +369,8 @@ const events: Family["events"] = [
     summary: "Eleven years of nights so he could be home in the afternoons. He never called it a sacrifice.",
     sourceMemoryIds: ["m-elena-dad"],
     confidence: 0.86,
+    emotion: "pride",
+    intensity: 0.95,
   },
   {
     id: "e-miguel-born",
@@ -362,6 +384,8 @@ const events: Family["events"] = [
     summary: "Born during the blizzard that shut the city for three days.",
     sourceMemoryIds: [],
     confidence: 0.93,
+    emotion: "joy",
+    intensity: 0.8,
   },
   {
     id: "e-radio",
@@ -376,6 +400,8 @@ const events: Family["events"] = [
       "Elena translated for her mother at the clinic by the time she was seven, having learned most of it from WLS.",
     sourceMemoryIds: ["m-elena-dad"],
     confidence: 0.79,
+    emotion: "pride",
+    intensity: 0.75,
   },
   {
     id: "e-shop",
@@ -389,6 +415,8 @@ const events: Family["events"] = [
     summary: "Half of a two-bay garage, paid for over four years. Miguel runs it now.",
     sourceMemoryIds: [],
     confidence: 0.81,
+    emotion: "pride",
+    intensity: 0.8,
   },
   {
     id: "e-elena-david",
@@ -402,6 +430,8 @@ const events: Family["events"] = [
     summary: "Rosa wore the same rebozo Josefa wore in 1962.",
     sourceMemoryIds: [],
     confidence: 0.96,
+    emotion: "love",
+    intensity: 0.9,
   },
   {
     id: "e-maya-born",
@@ -415,6 +445,8 @@ const events: Family["events"] = [
     summary: "",
     sourceMemoryIds: [],
     confidence: 0.98,
+    emotion: "joy",
+    intensity: 0.85,
   },
   {
     id: "e-josefa-dies",
@@ -428,6 +460,8 @@ const events: Family["events"] = [
     summary: "Rosa flew back for the first time in thirty years.",
     sourceMemoryIds: [],
     confidence: 0.87,
+    emotion: "grief",
+    intensity: 0.9,
   },
   {
     id: "e-leo-guitar",
@@ -441,6 +475,8 @@ const events: Family["events"] = [
     summary: "Tomás bought it for forty dollars and told Leo it had belonged to someone famous. It had not.",
     sourceMemoryIds: [],
     confidence: 0.74,
+    emotion: "joy",
+    intensity: 0.7,
   },
   {
     id: "e-tomas-dies",
@@ -454,6 +490,8 @@ const events: Family["events"] = [
     summary: "Eighty-one years old, in the apartment, with the television on.",
     sourceMemoryIds: [],
     confidence: 0.99,
+    emotion: "grief",
+    intensity: 1.0,
   },
   {
     id: "e-maya-boston",
@@ -467,6 +505,8 @@ const events: Family["events"] = [
     summary: "The first Alvarez to leave Chicago since 1968. Rosa did not speak to her for a week.",
     sourceMemoryIds: ["m-maya-note"],
     confidence: 0.88,
+    emotion: "longing",
+    intensity: 0.7,
   },
   {
     id: "e-sofia-project",
@@ -480,6 +520,8 @@ const events: Family["events"] = [
     summary: "Forty minutes of tape that nobody in the family had ever thought to make.",
     sourceMemoryIds: ["m-sofia-tape"],
     confidence: 0.92,
+    emotion: "love",
+    intensity: 0.8,
   },
 ];
 
@@ -496,6 +538,8 @@ const memories: Family["memories"] = [
     placeId: "pl-oaxaca",
     derivedEventIds: ["e-lemon-tree", "e-rosa-sewing"],
     status: "ready",
+    emotion: "longing",
+    intensity: 0.85,
   },
   {
     id: "m-sofia-tape",
@@ -509,6 +553,8 @@ const memories: Family["memories"] = [
     placeId: "pl-chicago",
     derivedEventIds: ["e-sofia-project"],
     status: "processing",
+    emotion: "joy",
+    intensity: 0.6,
   },
   {
     id: "m-ana-photo",
@@ -522,6 +568,8 @@ const memories: Family["memories"] = [
     placeId: "pl-chicago",
     derivedEventIds: [],
     status: "ready",
+    emotion: "longing",
+    intensity: 0.5,
   },
   {
     id: "m-elena-dad",
@@ -534,6 +582,8 @@ const memories: Family["memories"] = [
     placeId: "pl-chicago",
     derivedEventIds: ["e-steel", "e-radio"],
     status: "ready",
+    emotion: "pride",
+    intensity: 0.9,
   },
   {
     id: "m-rosa-arrival",
@@ -547,6 +597,8 @@ const memories: Family["memories"] = [
     placeId: "pl-chicago",
     derivedEventIds: ["e-arrival"],
     status: "ready",
+    emotion: "pride",
+    intensity: 0.85,
   },
   {
     id: "m-rosa-wedding",
@@ -560,6 +612,8 @@ const memories: Family["memories"] = [
     placeId: "pl-oaxaca",
     derivedEventIds: ["e-wedding", "e-tomas-born"],
     status: "ready",
+    emotion: "love",
+    intensity: 0.95,
   },
   {
     id: "m-maya-note",
@@ -571,6 +625,8 @@ const memories: Family["memories"] = [
     personIds: ["p-maya", "p-tomas"],
     derivedEventIds: ["e-leaving", "e-maya-boston"],
     status: "ready",
+    emotion: "grief",
+    intensity: 0.7,
   },
 ];
 

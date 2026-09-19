@@ -16,6 +16,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useFamily } from "@/lib/family-context";
 import type { EventCategory, FamilyEvent, Gap } from "@/lib/types";
+import { orbSurface } from "@/lib/emotions";
 import { cn, formatPartialDate, yearOf } from "@/lib/utils";
 
 const CATEGORY_ICON: Record<EventCategory, typeof Baby> = {
@@ -65,7 +66,7 @@ export function Timeline({
   return (
     <ol className="relative">
       {/* The rail. */}
-      <span aria-hidden className="absolute bottom-4 left-[15px] top-2 w-px bg-line-strong" />
+      <span aria-hidden className="absolute bottom-4 left-[14px] top-3 w-px bg-line-strong" />
 
       {rows.map((row, index) => {
         if (row.kind === "gap") {
@@ -73,15 +74,22 @@ export function Timeline({
           const asking = personById(gap.askPersonId);
           return (
             <li key={gap.id} className="relative pb-5 pl-11">
-              <span className="absolute left-[7px] top-1.5 flex size-[17px] items-center justify-center rounded-full border-2 border-canvas bg-gap text-white">
-                <HelpCircle className="size-2.5" strokeWidth={3} />
+              <span
+                className="absolute left-[3px] top-1 flex size-[23px] items-center justify-center rounded-full text-white/85"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 32% 26%, rgba(255,255,255,.85), rgba(199,187,168,.9) 48%, rgba(143,131,113,1) 100%)",
+                  boxShadow: "inset 0 -4px 10px -3px rgba(0,0,0,.28)",
+                }}
+              >
+                <HelpCircle className="size-3" strokeWidth={3} />
               </span>
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.3 }}
-                className="rounded-2xl border border-dashed border-gap/40 bg-gap-soft/50 p-3.5"
+                className="rounded-2xl border border-dashed border-gap/40 bg-gap-soft/60 p-3.5 backdrop-blur-sm"
               >
                 <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-gap">
                   Missing from the record
@@ -119,12 +127,10 @@ export function Timeline({
 
             <div className="relative pb-5 pl-11">
               <span
-                className={cn(
-                  "absolute left-[7px] top-1.5 flex size-[17px] items-center justify-center rounded-full border-2 border-canvas",
-                  event.scope === "canon" ? "bg-canon text-white" : "bg-ember text-white",
-                )}
+                className="absolute left-[3px] top-1 flex size-[23px] items-center justify-center rounded-full text-white"
+                style={orbSurface(event.emotion, event.intensity ?? 0.7)}
               >
-                <Icon className="size-2.5" strokeWidth={3} />
+                <Icon className="size-3 drop-shadow-[0_1px_1px_rgba(0,0,0,.35)]" strokeWidth={3} />
               </span>
 
               <motion.div
@@ -133,8 +139,8 @@ export function Timeline({
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: Math.min(index, 8) * 0.02, duration: 0.3 }}
                 className={cn(
-                  "rounded-2xl border bg-surface p-4",
-                  unconfirmed ? "border-dashed border-line-strong" : "border-line",
+                  "rounded-2xl p-4",
+                  unconfirmed ? "border border-dashed border-line-strong bg-surface/55" : "glass-solid",
                 )}
               >
                 <div className="flex items-baseline justify-between gap-3">

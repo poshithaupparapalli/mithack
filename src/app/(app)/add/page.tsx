@@ -105,7 +105,7 @@ export default function AddMemoryPage() {
         onChange={(event) => setText(event.target.value)}
         rows={6}
         placeholder="What do you remember? A room, a smell, something someone always said…"
-        className="w-full resize-y rounded-2xl border border-line bg-surface p-4 text-[1rem] leading-relaxed text-ink outline-none placeholder:text-ink-faint focus:border-line-strong"
+        className="glass-solid w-full resize-y rounded-2xl p-4 text-[1rem] leading-relaxed text-ink outline-none placeholder:text-ink-faint"
       />
 
       <div
@@ -118,7 +118,7 @@ export default function AddMemoryPage() {
         onClick={() => inputRef.current?.click()}
         className={cn(
           "mt-4 cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-colors",
-          dragging ? "border-ember bg-ember-soft/60" : "border-line-strong bg-surface/60 hover:border-ink-faint",
+          dragging ? "border-ember bg-ember-soft/60" : "border-line-strong bg-surface/40 backdrop-blur-sm hover:border-ink-faint",
         )}
       >
         <UploadCloud className={cn("mx-auto size-7", dragging ? "text-ember" : "text-ink-faint")} />
@@ -147,7 +147,7 @@ export default function AddMemoryPage() {
             {files.map((file, i) => (
               <li
                 key={`${file.name}-${i}`}
-                className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5"
+                className="glass-solid flex items-center gap-3 rounded-xl px-3 py-2.5"
               >
                 {file.type.startsWith("image/") ? (
                   <ImageIcon className="size-4 shrink-0 text-ink-faint" />

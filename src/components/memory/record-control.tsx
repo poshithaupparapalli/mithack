@@ -21,7 +21,7 @@ export function RecordControl({
   const busy = status === "transcribing";
 
   return (
-    <div className={cn("rounded-2xl border border-line bg-surface p-4", className)}>
+    <div className={cn("glass-solid rounded-2xl p-4", className)}>
       <div className="flex items-center gap-3.5">
         <button
           type="button"

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { MeshBackdrop } from "@/components/orb/mesh-backdrop";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { TopBar } from "@/components/nav/top-bar";
 import { useSettings } from "@/lib/settings-context";
@@ -21,7 +22,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-canvas">
+    <div className="flex min-h-dvh flex-col">
+      <MeshBackdrop />
       <TopBar />
       <main className="flex-1 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)]">{children}</main>
       <BottomNav />

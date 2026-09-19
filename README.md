@@ -57,6 +57,7 @@ nothing that isn't declared here.
 | `FamilyEvent` | `scope: "canon"` = shared family milestone, `"individual"` = one person's story. This is the Canon/Individual timeline toggle. `confidence < 0.6` renders as *unconfirmed*. |
 | `Memory` | A raw artefact — voice, photo or text. `status: "processing"` shows the "Keepsake is listening…" state. |
 | `Gap` | A hole in the record. This is what the AI Interviewer asks about, and what gets interleaved into the timeline as "Missing from the record". |
+| `Emotion` | `joy \| love \| pride \| longing \| grief`. **This is the one inferred field the UI genuinely depends on** — it colours every orb in the interface. Ships with an `intensity` (0–1) that drives orb size and glow. A missing emotion falls back to joy at low intensity rather than hiding the memory. |
 
 Dates are **partial ISO strings** (`"1968"`, `"1968-04"`, `"1968-04-12"`) paired
 with a `datePrecision`, because family memory genuinely is that fuzzy. Don't
@@ -77,8 +78,12 @@ Voice, keep the shape, and no component changes.
 
 ```
 POST /api/transcribe    multipart/form-data { audio: Blob, durationSec: string }
-→ 200                   { text: string, durationSec: number, confidence: number }
+→ 200                   { text, durationSec, confidence, emotion, intensity }
 ```
+
+`emotion` has to come back **with** the transcript, not in a later pass — in
+Elderly Mode the speaker watches her orb bloom into its colour the moment she
+stops talking, and that moment is the whole pitch.
 
 Live captions during recording come from the browser's own `SpeechRecognition`
 where it exists (instant, on-device); the POST response is authoritative. If
@@ -95,6 +100,28 @@ simulated take rather than dead-ending — see
   `resolveMemory(id, events)`. Point that at the real pipeline response.
 
 ---
+
+## The orb system
+
+Every memory is a bead of liquid glass, coloured by how it felt. This is the
+one visual idea the whole interface runs on, so it's worth not diluting:
+
+- **Colour lives only in orbs.** Parchment ground, warm neutral type, glass
+  chrome — none of it is ever tinted. If something is saturated, it's a memory.
+  The palette is in [`src/lib/emotions.ts`](src/lib/emotions.ts) and nowhere else.
+- **`glassOrbSurface()`** is the liquid-glass recipe: a real `backdrop-filter`
+  bending the mesh behind it, a bright inset rim where light enters top-left, a
+  saturated bloom where it pools bottom-right, and an off-centre specular
+  highlight. `orbSurface()` is the solid fallback — use it under ~28px or
+  wherever an icon sits on top, because glass that small turns to mud.
+- **Home is a constellation, not a feed.** Orbs are laid out on a phyllotaxis
+  spiral ([`src/lib/constellation.ts`](src/lib/constellation.ts)) — even spacing
+  with no collision pass, identical on server and client. Tap to open; tap a
+  feeling in the legend to isolate it.
+- **A gap is an unlit orb.** Clear glass, no colour. Answering one lights it.
+- **The mesh** ([`mesh-backdrop.tsx`](src/components/orb/mesh-backdrop.tsx)) is
+  four very large CSS radial washes over parchment, tintable per screen. No
+  image assets, so nothing to license and nothing to fail on a projector.
 
 ## Stack
 
@@ -116,3 +143,7 @@ These are deliberate and worth not regressing:
 - Focus rings are visible everywhere; `prefers-reduced-motion` is respected.
 - Elderly Mode never uses the words "AI", "transcribe", or "data". The question
   comes from *Maya*, not from a model.
+- The record button is an orb, not a microphone. At rest it's clear, unlit
+  glass; her voice's amplitude feeds its intensity, so it warms as she speaks
+  and blooms into its emotion when it saves. She never sees a waveform, a
+  timer, or the word "recording".

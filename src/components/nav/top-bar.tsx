@@ -23,7 +23,7 @@ export function TopBar() {
   const me = family.people.find((p) => p.id === currentUserId);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-white/45 bg-canvas/55 backdrop-blur-xl backdrop-saturate-150">
       <div
         className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 pb-3"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
@@ -40,7 +40,7 @@ export function TopBar() {
         <Link
           href="/chat"
           aria-label={`Keepsake has ${openGaps.length} questions for the family`}
-          className="relative flex size-10 items-center justify-center rounded-full border border-line bg-surface text-ink-soft transition-colors hover:text-ink"
+          className="glass relative flex size-10 items-center justify-center rounded-full text-ink-soft transition-colors hover:text-ink"
         >
           <MessageCircleHeart className="size-5" />
           {openGaps.length > 0 ? (

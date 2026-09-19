@@ -1,14 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mic } from "lucide-react";
 import { useRef } from "react";
+import { MemoryOrb } from "@/components/orb/memory-orb";
+import type { Emotion } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const HOLD_MS = 700;
+const SIZE = 272;
 
 /**
- * The only control on the screen.
+ * The only control on the screen — and the memory it is about to become.
+ *
+ * At rest it is clear, unlit glass. As she speaks, her own voice warms it:
+ * the amplitude feeds the orb's intensity, so the thing she is making glows
+ * brighter the more she gives it. Nothing here says "recording".
  *
  * Works three ways on purpose: press and hold, a single tap to latch it on,
  * or the spacebar. Holding steadily is hard with a tremor, so tapping has to
@@ -17,12 +23,14 @@ const HOLD_MS = 700;
 export function HoldToSpeak({
   recording,
   level,
+  emotion,
   onStart,
   onStop,
   disabled,
 }: {
   recording: boolean;
   level: number;
+  emotion?: Emotion;
   onStart: () => void;
   onStop: () => void;
   disabled?: boolean;
@@ -54,24 +62,30 @@ export function HoldToSpeak({
     if (recording && Date.now() - pressedAt.current > HOLD_MS) onStop();
   }
 
+  // Her voice, mapped onto how brightly the glass burns.
+  const intensity = recording ? Math.min(1, 0.34 + level * 1.5) : 0.16;
+
   return (
     <div className="relative flex flex-col items-center">
-      {recording ? (
-        <>
-          <motion.span
-            aria-hidden
-            className="absolute inset-0 m-auto size-[17rem] rounded-full bg-ember/15"
-            animate={{ scale: 1 + level * 0.55 }}
-            transition={{ type: "spring", stiffness: 260, damping: 18 }}
-          />
-          <motion.span
-            aria-hidden
-            className="absolute inset-0 m-auto size-[17rem] rounded-full bg-ember/10"
-            animate={{ scale: 1.12 + level * 0.9 }}
-            transition={{ type: "spring", stiffness: 180, damping: 20 }}
-          />
-        </>
-      ) : null}
+      {/* Breath. Slow at rest, quickened by speech. */}
+      <motion.span
+        aria-hidden
+        className="absolute inset-0 m-auto rounded-full"
+        style={{ width: SIZE, height: SIZE }}
+        animate={{ scale: recording ? 1.06 + level * 0.22 : [1, 1.035, 1] }}
+        transition={
+          recording
+            ? { type: "spring", stiffness: 240, damping: 18 }
+            : { duration: 5.5, repeat: Infinity, ease: "easeInOut" }
+        }
+      >
+        <MemoryOrb
+          emotion={recording ? (emotion ?? "joy") : emotion}
+          intensity={intensity}
+          size={SIZE}
+          halo
+        />
+      </motion.span>
 
       <button
         type="button"
@@ -95,14 +109,15 @@ export function HoldToSpeak({
         aria-pressed={recording}
         aria-label={recording ? "Stop recording" : "Hold to speak"}
         className={cn(
-          "relative flex size-[17rem] touch-none select-none flex-col items-center justify-center gap-3 rounded-full text-white transition-colors",
-          "shadow-[0_12px_40px_rgba(194,65,12,0.28)] active:scale-[0.98]",
-          recording ? "bg-ink shadow-[0_12px_40px_rgba(28,25,23,0.3)]" : "bg-ember",
+          "relative flex touch-none select-none items-center justify-center rounded-full transition-transform active:scale-[0.98]",
           disabled && "opacity-50",
         )}
+        style={{ width: SIZE, height: SIZE }}
       >
-        <Mic className="size-16" strokeWidth={1.6} />
-        <span className="px-6 text-center text-[1.6rem] font-medium leading-tight">
+        <span
+          className="px-10 text-center font-serif text-[1.75rem] leading-tight text-ink"
+          style={{ textShadow: "0 1px 2px rgba(255,255,255,0.9)" }}
+        >
           {recording ? "I'm finished" : "Hold to speak"}
         </span>
       </button>

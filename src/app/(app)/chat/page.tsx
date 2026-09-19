@@ -19,7 +19,13 @@ export default function ChatPage() {
   const [draft, setDraft] = useState("");
 
   const voice = useVoiceCapture({
-    onComplete: (result) => answer(result.text, "voice", result.durationSec),
+    onComplete: (result) =>
+      answer(result.text, {
+        kind: "voice",
+        durationSec: result.durationSec,
+        emotion: result.emotion,
+        intensity: result.intensity,
+      }),
   });
 
   const recording = voice.status === "recording";
@@ -29,12 +35,12 @@ export default function ChatPage() {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
-    answer(text, "text");
+    answer(text);
   }
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col px-4 pt-4">
-      <div className="rounded-2xl border border-line bg-surface/70 p-3.5">
+      <div className="glass rounded-2xl p-3.5">
         <div className="flex items-start gap-2.5">
           <Badge tone="gap">{openGaps.length} open</Badge>
           <p className="flex-1 text-xs leading-relaxed text-ink-soft">
@@ -86,7 +92,7 @@ export default function ChatPage() {
             rows={1}
             placeholder={recording ? "Listening…" : "Type your answer…"}
             disabled={recording || transcribing}
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-line bg-surface px-4 py-2.5 text-[0.97rem] leading-relaxed text-ink outline-none placeholder:text-ink-faint focus:border-line-strong disabled:opacity-60"
+            className="glass-solid max-h-32 min-h-11 flex-1 resize-none rounded-2xl px-4 py-2.5 text-[0.97rem] leading-relaxed text-ink outline-none placeholder:text-ink-faint disabled:opacity-60"
           />
 
           {draft.trim() ? (

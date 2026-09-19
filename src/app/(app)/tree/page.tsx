@@ -18,17 +18,34 @@ import { PersonPanel } from "@/components/tree/person-panel";
 import { useFamily } from "@/lib/family-context";
 import { useSettings } from "@/lib/settings-context";
 import { layoutFamily } from "@/lib/tree-layout";
-import type { ID } from "@/lib/types";
+import type { Emotion, ID } from "@/lib/types";
 
 const nodeTypes = { person: PersonNode };
 
 function TreeCanvas() {
-  const { family, openGaps } = useFamily();
+  const { family, openGaps, memoriesFor } = useFamily();
   const { currentUserId } = useSettings();
   const [selected, setSelected] = useState<ID | null>(null);
 
   const { nodes, edges } = useMemo(() => {
     const laidOut = layoutFamily(family.people);
+
+    /** Whichever feeling carries the most weight across someone's memories. */
+    const dominant = (id: ID) => {
+      const memories = memoriesFor(id);
+      const tally = new Map<Emotion, number>();
+      for (const memory of memories) {
+        if (!memory.emotion) continue;
+        tally.set(memory.emotion, (tally.get(memory.emotion) ?? 0) + (memory.intensity ?? 0.7));
+      }
+      const best = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
+      return {
+        emotion: best?.[0],
+        intensity: best ? Math.min(1, best[1] / Math.max(1, memories.length)) : undefined,
+        memoryCount: memories.length,
+      };
+    };
+
     const xOf = new Map(laidOut.map((l) => [l.person.id, l.x]));
 
     const nodes: Node<PersonNodeData>[] = laidOut.map(({ person, x, y }) => ({
@@ -39,6 +56,7 @@ function TreeCanvas() {
         person,
         isMe: person.id === currentUserId,
         hasOpenGap: openGaps.some((g) => g.subjectPersonId === person.id),
+        ...dominant(person.id),
       },
     }));
 
@@ -80,7 +98,7 @@ function TreeCanvas() {
     }
 
     return { nodes, edges };
-  }, [family.people, currentUserId, openGaps]);
+  }, [family.people, currentUserId, openGaps, memoriesFor]);
 
   const onNodeClick: NodeMouseHandler = (_, node) => setSelected(node.id);
 
@@ -100,13 +118,13 @@ function TreeCanvas() {
           nodesConnectable={false}
           elementsSelectable
           proOptions={{ hideAttribution: true }}
-          className="[&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing"
+          className="!bg-transparent [&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing"
         >
           <Background
             variant={BackgroundVariant.Dots}
-            gap={22}
-            size={1.4}
-            color="var(--color-line-strong)"
+            gap={26}
+            size={1.2}
+            color="rgba(140,125,105,0.35)"
           />
           <Controls
             showInteractive={false}
@@ -114,7 +132,7 @@ function TreeCanvas() {
           />
         </ReactFlow>
 
-        <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-line bg-surface/85 px-3 py-1.5 text-xs text-ink-faint backdrop-blur">
+        <div className="glass pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-ink-faint">
           <Info className="size-3.5" />
           Tap anyone to open their story
         </div>

@@ -50,6 +50,15 @@ export interface Person {
   prefersVoice?: boolean;
 }
 
+/**
+ * How a memory felt. This is what colours every orb in the interface, so it
+ * is the one inferred field the UI genuinely depends on.
+ *
+ * Muse should return its best single guess plus an `intensity` — we render a
+ * dim orb for an uncertain reading rather than hiding it.
+ */
+export type Emotion = "joy" | "love" | "pride" | "longing" | "grief";
+
 export type EventScope = "canon" | "individual";
 
 export type EventCategory =
@@ -75,6 +84,10 @@ export interface FamilyEvent {
   sourceMemoryIds: ID[];
   /** 0–1. Below ~0.6 the UI shows it as unconfirmed. */
   confidence: number;
+  /** Colours this event's orb on the timeline. */
+  emotion?: Emotion;
+  /** 0–1. Drives how brightly the orb burns. */
+  intensity?: number;
 }
 
 export type MemoryKind = "voice" | "photo" | "text";
@@ -93,6 +106,10 @@ export interface Memory {
   placeId?: ID;
   derivedEventIds: ID[];
   status: "processing" | "ready";
+  /** Colours this memory's orb in the constellation. */
+  emotion?: Emotion;
+  /** 0–1. Drives orb size and glow. */
+  intensity?: number;
 }
 
 /**

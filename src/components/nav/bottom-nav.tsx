@@ -20,7 +20,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas/90 backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/45 bg-canvas/60 backdrop-blur-xl backdrop-saturate-150"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <ul className="mx-auto flex w-full max-w-2xl items-stretch justify-between px-2 py-1.5">

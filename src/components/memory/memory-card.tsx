@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { FileText, ImageIcon, Loader2, Mic, Play } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { MemoryOrb } from "@/components/orb/memory-orb";
+import { emotionSpec } from "@/lib/emotions";
 import { Badge } from "@/components/ui/badge";
 import { useFamily } from "@/lib/family-context";
 import type { Memory } from "@/lib/types";
@@ -30,8 +32,8 @@ export function MemoryCard({ memory, index = 0 }: { memory: Memory; index?: numb
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.05, duration: 0.35 }}
       className={cn(
-        "rounded-2xl border bg-surface p-4",
-        processing ? "border-dashed border-line-strong" : "border-line",
+        "rounded-2xl p-4",
+        processing ? "border border-dashed border-line-strong bg-surface/55" : "glass-solid",
       )}
     >
       <div className="flex items-center gap-2.5">
@@ -43,11 +45,12 @@ export function MemoryCard({ memory, index = 0 }: { memory: Memory; index?: numb
             {place ? ` · ${place.shortName}` : ""}
           </p>
         </div>
-        <span className="flex items-center gap-1.5 text-ink-faint">
+        <span className="flex items-center gap-2 text-ink-faint">
           <Icon className="size-4" />
           {memory.kind === "voice" ? (
             <span className="text-xs tabular-nums">{duration(memory.durationSec)}</span>
           ) : null}
+          <MemoryOrb emotion={memory.emotion} intensity={memory.intensity ?? 0.7} size={22} />
         </span>
       </div>
 
@@ -56,7 +59,7 @@ export function MemoryCard({ memory, index = 0 }: { memory: Memory; index?: numb
       ) : null}
 
       {memory.kind === "voice" ? (
-        <div className="mt-3 flex items-center gap-3 rounded-xl bg-surface-sunk px-3 py-2.5">
+        <div className="mt-3 flex items-center gap-3 rounded-xl bg-surface-sunk/70 px-3 py-2.5">
           <button
             aria-label={`Play ${memory.title ?? "recording"}`}
             className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-canvas transition-transform active:scale-95"
@@ -71,8 +74,13 @@ export function MemoryCard({ memory, index = 0 }: { memory: Memory; index?: numb
         <p
           className={cn(
             "mt-3 text-[0.94rem] leading-relaxed text-ink-soft",
-            memory.kind === "voice" && "border-l-2 border-line-strong pl-3 italic",
+            memory.kind === "voice" && "border-l-2 pl-3 italic",
           )}
+          style={
+            memory.kind === "voice"
+              ? { borderColor: emotionSpec(memory.emotion).core }
+              : undefined
+          }
         >
           {memory.body}
         </p>

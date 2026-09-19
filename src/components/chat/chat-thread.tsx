@@ -46,7 +46,7 @@ export function ChatThread({
               className={cn(
                 "max-w-[78%] rounded-2xl px-4 py-3 text-[0.97rem] leading-relaxed",
                 fromAgent
-                  ? "rounded-bl-sm border border-line bg-surface text-ink"
+                  ? "glass-solid rounded-bl-sm text-ink"
                   : "rounded-br-sm bg-ink text-canvas",
               )}
             >
@@ -71,7 +71,7 @@ export function ChatThread({
           <span className="mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-ink text-canvas">
             <Sparkles className="size-4" />
           </span>
-          <div className="flex gap-1 rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-3.5">
+          <div className="glass-solid flex gap-1 rounded-2xl rounded-bl-sm px-4 py-3.5">
             {[0, 1, 2].map((i) => (
               <motion.span
                 key={i}
