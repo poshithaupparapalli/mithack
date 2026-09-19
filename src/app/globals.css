@@ -1,0 +1,104 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  /* Keepsake palette — warm, archival, high-contrast.
+     Chosen so Elderly Mode passes WCAG AAA on body text. */
+  --color-canvas: #faf6ef;
+  --color-surface: #ffffff;
+  --color-surface-sunk: #f4ede1;
+  --color-ink: #1c1917;
+  --color-ink-soft: #57534e;
+  --color-ink-faint: #8a8279;
+  --color-line: #e7dfd3;
+  --color-line-strong: #d6cab6;
+
+  --color-ember: #c2410c;
+  --color-ember-soft: #fdece3;
+  --color-canon: #0f766e;
+  --color-canon-soft: #e2f2f0;
+  --color-gap: #a16207;
+  --color-gap-soft: #fdf3d9;
+
+  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xl2: 1.25rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* Never let the page rubber-band horizontally on mobile. */
+  overflow-x: hidden;
+}
+
+/* Elderly Mode raises the floor on every text size in its subtree,
+   so nothing inherits a "normal app" scale by accident. */
+[data-elder="true"] {
+  font-size: 1.375rem;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+}
+
+/* Visible focus everywhere — Elder users navigate with big taps and
+   sometimes a keyboard; never ship an invisible focus ring. */
+:focus-visible {
+  outline: 3px solid var(--color-ember);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* React Flow surface blends into the parchment canvas. */
+.react-flow__attribution {
+  display: none;
+}
+
+/* Leaflet tiles sit on a warm ground rather than grey. */
+.leaflet-container {
+  background: var(--color-surface-sunk);
+  font-family: var(--font-sans);
+}
+
+/* Leaflet popups, restyled to match the rest of the app. */
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  box-shadow: 0 8px 28px rgba(28, 25, 23, 0.16);
+}
+.leaflet-popup-content {
+  margin: 0.85rem 1rem;
+  min-width: 13rem;
+}
+.leaflet-popup-tip {
+  background: var(--color-surface);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-ink-faint);
+  padding: 0.5rem 0.5rem 0 0;
+}
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.75) !important;
+  font-size: 10px;
+}
