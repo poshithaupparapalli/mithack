@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum EventScope {
+  CANON
+  INDIVIDUAL
+}
+enum EventCategory {
+  BIRTH
+  MARRIAGE
+  MIGRATION
+  DEATH
+  MILESTONE
+  ANECDOTE
+}
+enum DatePrecision {
+  YEAR
+  MONTH
+  DAY
+}
+enum MemoryKind {
+  VOICE
+  PHOTO
+  TEXT
+}
+enum MemoryStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+enum GapStatus {
+  OPEN
+  ANSWERED
+  SKIPPED
+}
+
+model User {
+  id          String         @id
+  name        String
+  email       String?        @unique
+  memberships FamilyMember[]
+  memories    Memory[]       @relation("MemoryAuthor")
+}
+
+model Family {
+  id         String           @id
+  name       String
+  inviteCode String           @unique
+  createdAt  DateTime         @default(now())
+  members    FamilyMember[]
+  people     Person[]
+  places     Place[]
+  events     Event[]
+  memories   Memory[]
+  gaps       InformationGap[]
+}
+
+model FamilyMember {
+  familyId String
+  userId   String
+  role     String @default("member")
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([familyId, userId])
+}
+
+model Person {
+  id               String           @id
+  familyId         String
+  name             String
+  fullName         String?
+  nickname         String?
+  photoUrl         String?
+  birthYear        Int?
+  deathYear        Int?
+  isLiving         Boolean          @default(true)
+  bio              String?
+  generation       Int              @default(0)
+  contributedCount Int              @default(0)
+  prefersVoice     Boolean          @default(false)
+  birthPlaceId     String?
+  currentPlaceId   String?
+  family           Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  birthPlace       Place?           @relation("BirthPlace", fields: [birthPlaceId], references: [id])
+  currentPlace     Place?           @relation("CurrentPlace", fields: [currentPlaceId], references: [id])
+  parentLinks      ParentChild[]    @relation("Child")
+  childLinks       ParentChild[]    @relation("Parent")
+  spouseLinks      PersonSpouse[]   @relation("SpouseLeft")
+  spouseOfLinks    PersonSpouse[]   @relation("SpouseRight")
+  memoryLinks      MemoryPerson[]
+  eventLinks       EventPerson[]
+  subjectGaps      InformationGap[] @relation("GapSubject")
+  askGaps          InformationGap[] @relation("GapAskPerson")
+  @@index([familyId])
+}
+
+model ParentChild {
+  parentId String
+  childId  String
+  parent   Person @relation("Parent", fields: [parentId], references: [id], onDelete: Cascade)
+  child    Person @relation("Child", fields: [childId], references: [id], onDelete: Cascade)
+  @@id([parentId, childId])
+}
+
+model PersonSpouse {
+  leftId  String
+  rightId String
+  left    Person @relation("SpouseLeft", fields: [leftId], references: [id], onDelete: Cascade)
+  right   Person @relation("SpouseRight", fields: [rightId], references: [id], onDelete: Cascade)
+  @@id([leftId, rightId])
+}
+
+model Place {
+  id       String   @id
+  familyId String
+  name     String
+  shortName String
+  lat      Float
+  lng      Float
+  kind     String
+  family   Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  births   Person[] @relation("BirthPlace")
+  currents Person[] @relation("CurrentPlace")
+  events   Event[]
+  memories Memory[]
+  @@index([familyId])
+}
+
+model Memory {
+  id          String       @id
+  familyId    String
+  authorId    String
+  kind        MemoryKind
+  createdAt   DateTime     @default(now())
+  title       String?
+  body        String?
+  mediaUrl    String?
+  durationSec Int?
+  placeId     String?
+  status      MemoryStatus @default(PROCESSING)
+  family      Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  author      User         @relation("MemoryAuthor", fields: [authorId], references: [id])
+  place       Place?       @relation(fields: [placeId], references: [id])
+  people      MemoryPerson[]
+  eventLinks  EventMemory[]
+  @@index([familyId, createdAt])
+}
+
+model MemoryPerson {
+  memoryId String
+  personId String
+  memory   Memory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  @@id([memoryId, personId])
+}
+
+model Event {
+  id            String        @id
+  familyId      String
+  title         String
+  date          String
+  datePrecision DatePrecision
+  scope         EventScope
+  category      EventCategory
+  summary       String
+  confidence    Float
+  placeId       String?
+  family        Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  place         Place?        @relation(fields: [placeId], references: [id])
+  people        EventPerson[]
+  memories      EventMemory[]
+  gaps          InformationGap[]
+  @@index([familyId, date])
+}
+
+model EventPerson {
+  eventId  String
+  personId String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  @@id([eventId, personId])
+}
+
+model EventMemory {
+  eventId  String
+  memoryId String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memory   Memory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  @@id([eventId, memoryId])
+}
+
+model InformationGap {
+  id              String    @id
+  familyId        String
+  question        String
+  rationale       String
+  subjectPersonId String
+  askPersonId     String
+  relatedEventId  String?
+  priority        Int       @default(1)
+  status          GapStatus @default(OPEN)
+  createdAt       DateTime  @default(now())
+  family          Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  subjectPerson   Person    @relation("GapSubject", fields: [subjectPersonId], references: [id], onDelete: Cascade)
+  askPerson       Person    @relation("GapAskPerson", fields: [askPersonId], references: [id], onDelete: Cascade)
+  relatedEvent    Event?    @relation(fields: [relatedEventId], references: [id], onDelete: SetNull)
+  @@index([familyId, status, priority])
+}

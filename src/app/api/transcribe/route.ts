@@ -6,49 +6,38 @@ import { NextResponse } from "next/server";
  * this handler with a Meta Muse Voice call; keep the response shape and no
  * UI needs to change.
  *
- * Request:  multipart/form-data { audio: Blob, durationSec: string }
- * Response: { text, durationSec, confidence, emotion, intensity }
- *
- * `emotion` is what colours the orb the speaker watches bloom the moment
- * they finish talking, so it has to come back with the transcript rather
- * than in a later pass.
+ * Request:  multipart/form-data { audio: Blob, prompt?: string }
+ * Response: { text: string, durationSec: number, confidence: number }
  * ──────────────────────────────────────────────────────────────────────────
  */
-
-const CANNED = [
-  {
-    text: "She kept every letter anyone ever sent her, in a biscuit tin on top of the wardrobe. After she died we found forty years of them, in order, with the newest on top.",
-    emotion: "longing",
-    intensity: 0.82,
-  },
-  {
-    text: "He worked nights for eleven years so he could pick us up from school. I only understood what that cost him after I had my own kids.",
-    emotion: "pride",
-    intensity: 0.9,
-  },
-  {
-    text: "We ate standing up in the kitchen because there was no table yet. He said it was the best thing he'd ever tasted and he was lying, but I've never forgotten him saying it.",
-    emotion: "love",
-    intensity: 0.92,
-  },
-] as const;
 
 export async function POST(request: Request) {
   const form = await request.formData().catch(() => null);
   const audio = form?.get("audio");
   const durationSec = Number(form?.get("durationSec") ?? 0);
+  const apiKey = process.env.MODEL_API_KEY;
+  if (!(audio instanceof Blob)) return NextResponse.json({ error: "An audio recording is required." }, { status: 400 });
+  if (!apiKey) return NextResponse.json({ error: "MODEL_API_KEY is not configured." }, { status: 503 });
 
-  // Stand-in for real inference latency, so the UI's waiting states get exercised.
-  await new Promise((resolve) => setTimeout(resolve, 900));
+  const upstream = new FormData();
+  upstream.append("request", new Blob([JSON.stringify({
+    model: "muse-voice-transcribe-1.0", mode: "PUSH_TO_TALK", audioEncoding: "WAV",
+    languageBias: ["English", "Spanish"], keywords: ["Keepsake", "Alvarez", "Chen", "Oaxaca", "Pilsen"],
+  })], { type: "application/json" }));
+  upstream.append("audio", audio, "keepsake-recording.wav");
 
-  const pick = CANNED[Math.floor(Math.random() * CANNED.length)];
-
+  const response = await fetch("https://api.meta.ai/v1/asr/transcribe", {
+    method: "POST", headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" }, body: upstream,
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) return NextResponse.json({ error: payload?.message ?? "Muse Voice transcription failed." }, { status: response.status });
   return NextResponse.json({
-    text: pick.text,
-    emotion: pick.emotion,
-    intensity: pick.intensity,
-    durationSec: durationSec || 42,
-    confidence: 0.92,
-    bytes: audio instanceof Blob ? audio.size : 0,
+    text: payload?.transcript ?? "",
+    durationSec: Math.round((payload?.audioDurationMs ?? durationSec * 1000) / 1000),
+    confidence: 1,
+    emotion: "love",
+    intensity: 0.72,
+    turns: payload?.turns ?? [],
+    sessionId: payload?.sessionId,
   });
 }
