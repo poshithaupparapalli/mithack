@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Send, Sparkles } from "lucide-react";
+import { ArrowRight, MessageCircleHeart, Plus, Send, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
@@ -47,6 +47,7 @@ export default function HomePage() {
   }, [family.memories]);
 
   const open = family.memories.find((m) => m.id === openId) ?? null;
+  const empty = family.memories.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pt-3">
@@ -55,12 +56,16 @@ export default function HomePage() {
           {greeting()}, {me?.name.split(" ")[0] ?? "there"}.
         </p>
         <p className="mt-1.5 text-[0.98rem] leading-relaxed text-ink-soft">
-          {family.memories.length} memories, {span}. Every one of them is a colour now.
+          {empty
+            ? "Nothing here yet. The sky fills up the first time someone talks."
+            : `${family.memories.length} ${family.memories.length === 1 ? "memory" : "memories"}${
+                years.length ? `, ${span}` : ""
+              }. Every one of them is a colour now.`}
         </p>
       </header>
 
       {/* Legend and filter in one control — tap a feeling to isolate it. */}
-      <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className={cn("-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1", empty && "hidden")}>
         {EMOTION_ORDER.map((emotion) => {
           const spec = EMOTIONS[emotion];
           const count = counts.get(emotion) ?? 0;
@@ -93,6 +98,56 @@ export default function HomePage() {
         aria-label="Your family's memories"
         className="relative mt-4 h-[58dvh] min-h-[380px] w-full"
       >
+        {empty ? (
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            {/* One unlit orb: clear glass, waiting for a voice to colour it. */}
+            <motion.span
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: [1, 1.035, 1] }}
+              transition={{
+                opacity: { duration: 0.6 },
+                scale: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+              }}
+              className="size-40 rounded-full border border-white/55"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 30% 24%, rgba(255,255,255,.75), rgba(255,255,255,.05) 45%), radial-gradient(circle at 70% 76%, rgba(168,156,138,.2), transparent 62%)",
+                backdropFilter: "blur(7px) saturate(180%)",
+                WebkitBackdropFilter: "blur(7px) saturate(180%)",
+                boxShadow:
+                  "inset 0 2px 6px rgba(255,255,255,.9), inset -10px -14px 30px -12px rgba(120,108,92,.55), 0 16px 44px -16px rgba(76,48,34,.25)",
+              }}
+            />
+
+            <p className="mt-8 font-serif text-[1.45rem] leading-snug text-ink">
+              Your first memory goes here.
+            </p>
+            <p className="mt-2 max-w-xs text-[0.95rem] leading-relaxed text-ink-soft">
+              Say something out loud, or write it down. Keepsake turns it into a light you can
+              come back to.
+            </p>
+
+            <div className="mt-7 flex w-full max-w-xs flex-col gap-2.5">
+              <Button size="lg" className="w-full justify-between rounded-2xl" asChild>
+                <Link href="/add">
+                  <span className="flex items-center gap-2">
+                    <Plus className="size-5" />
+                    Record your first memory
+                  </span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Link
+                href="/chat"
+                className="glass flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-[0.95rem] font-medium text-ink"
+              >
+                <MessageCircleHeart className="size-[18px]" />
+                Let Keepsake ask me something
+              </Link>
+            </div>
+          </div>
+        ) : null}
+
         {family.memories.map((memory, i) => {
           const place = placements[i];
           const spec = emotionSpec(memory.emotion);
@@ -133,6 +188,7 @@ export default function HomePage() {
         <AnimatePresence mode="wait">
           <motion.p
             key={filter ?? "hint"}
+            hidden={empty}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
@@ -196,7 +252,8 @@ export default function HomePage() {
 
       <div className="mt-4 flex items-center justify-between pb-2 text-sm">
         <Link href="/chat" className="font-medium text-ember hover:underline">
-          {Math.max(0, openGaps.length - 1)} more questions
+          {Math.max(0, openGaps.length - 1)} more{" "}
+          {openGaps.length === 2 ? "question" : "questions"}
         </Link>
         <Link
           href="/timeline"

@@ -4,28 +4,109 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   type ReactNode,
 } from "react";
-import { mockFamily } from "@/lib/mock-data";
+import {
+  emptyFamily,
+  gapForPerson,
+  hasFamily as familyExists,
+  newInviteCode,
+  openingGaps,
+} from "@/lib/seed";
 import type { Family, FamilyEvent, Gap, ID, Memory, Person, Place } from "@/lib/types";
 
+/** How a new person hangs off someone already on the tree. */
+export type RelationLink = { personId: ID; relation: "parent" | "child" | "partner" };
+
+const STORAGE_KEY = "keepsake.family.v1";
+
 /**
- * Holds the family record. Today it's seeded from mock JSON; swapping in the
- * real API means replacing `initial` with a fetch and keeping every selector.
+ * The family record. Starts genuinely empty and is built up entirely by the
+ * people using it, then persisted to localStorage so a family's memories
+ * survive closing the tab.
+ *
+ * Swapping in the API means replacing the hydrate/persist effects with fetch
+ * and PATCH; every selector below stays exactly as it is.
  */
 
 type Action =
+  | { type: "hydrate"; family: Family }
+  | { type: "createFamily"; name: string; founder: Person }
+  | { type: "addPerson"; person: Person; askPersonId: ID; link?: RelationLink }
+  | { type: "addPlace"; place: Place }
   | { type: "addMemory"; memory: Memory }
   | { type: "resolveMemory"; id: ID; events: FamilyEvent[] }
   | { type: "answerGap"; gapId: ID; memory: Memory }
-  | { type: "skipGap"; gapId: ID };
+  | { type: "skipGap"; gapId: ID }
+  | { type: "reset" };
 
 function reducer(state: Family, action: Action): Family {
   switch (action.type) {
+    case "hydrate":
+      return action.family;
+
+    case "createFamily":
+      return {
+        ...emptyFamily(),
+        id: `fam-${Date.now().toString(36)}`,
+        name: action.name,
+        inviteCode: newInviteCode(),
+        people: [action.founder],
+        gaps: openingGaps(action.founder.id),
+      };
+
+    case "addPerson": {
+      // Relationships are two-sided: adding a mother also makes someone a child.
+      let people = state.people;
+      let person = action.person;
+      const other = action.link
+        ? state.people.find((p) => p.id === action.link!.personId)
+        : undefined;
+
+      if (other && action.link) {
+        if (action.link.relation === "parent") {
+          person = { ...person, generation: other.generation - 1 };
+          people = people.map((p) =>
+            p.id === other.id ? { ...p, parentIds: [...p.parentIds, person.id] } : p,
+          );
+        } else if (action.link.relation === "child") {
+          person = {
+            ...person,
+            generation: other.generation + 1,
+            parentIds: [other.id, ...other.spouseIds],
+          };
+        } else {
+          person = { ...person, generation: other.generation, spouseIds: [other.id] };
+          people = people.map((p) =>
+            p.id === other.id ? { ...p, spouseIds: [...p.spouseIds, person.id] } : p,
+          );
+        }
+      }
+
+      return {
+        ...state,
+        people: [...people, person],
+        // A new face with no stories is itself a question worth asking.
+        gaps: [...state.gaps, gapForPerson(person, action.askPersonId)],
+      };
+    }
+
+    case "addPlace":
+      return { ...state, places: [...state.places, action.place] };
+
     case "addMemory":
-      return { ...state, memories: [action.memory, ...state.memories] };
+      return {
+        ...state,
+        memories: [action.memory, ...state.memories],
+        people: state.people.map((p) =>
+          p.id === action.memory.authorId
+            ? { ...p, contributedCount: p.contributedCount + 1 }
+            : p,
+        ),
+      };
 
     case "resolveMemory":
       // The pipeline came back: mark the memory ready and fold in what it found.
@@ -43,6 +124,11 @@ function reducer(state: Family, action: Action): Family {
       return {
         ...state,
         memories: [action.memory, ...state.memories],
+        people: state.people.map((p) =>
+          p.id === action.memory.authorId
+            ? { ...p, contributedCount: p.contributedCount + 1 }
+            : p,
+        ),
         gaps: state.gaps.map((g) => (g.id === action.gapId ? { ...g, status: "answered" } : g)),
       };
 
@@ -52,6 +138,9 @@ function reducer(state: Family, action: Action): Family {
         gaps: state.gaps.map((g) => (g.id === action.gapId ? { ...g, status: "skipped" } : g)),
       };
 
+    case "reset":
+      return emptyFamily();
+
     default:
       return state;
   }
@@ -59,6 +148,10 @@ function reducer(state: Family, action: Action): Family {
 
 interface FamilyContextValue {
   family: Family;
+  /** False until localStorage has been read — screens must not flash empty. */
+  hydrated: boolean;
+  /** True once someone has actually started a family. */
+  hasFamily: boolean;
   personById: (id: ID) => Person | undefined;
   placeById: (id?: ID) => Place | undefined;
   eventById: (id: ID) => FamilyEvent | undefined;
@@ -69,24 +162,49 @@ interface FamilyContextValue {
   /** The next question the interviewer should ask this person. */
   nextGapFor: (personId: ID) => Gap | undefined;
   childrenOf: (id: ID) => Person[];
+  createFamily: (name: string, founder: Person) => void;
+  addPerson: (person: Person, askPersonId: ID, link?: RelationLink) => void;
+  addPlace: (place: Place) => void;
   addMemory: (memory: Memory) => void;
   resolveMemory: (id: ID, events: FamilyEvent[]) => void;
   answerGap: (gapId: ID, memory: Memory) => void;
   skipGap: (gapId: ID) => void;
+  reset: () => void;
 }
 
 const FamilyContext = createContext<FamilyContextValue | null>(null);
 
 export function FamilyProvider({ children }: { children: ReactNode }) {
-  const [family, dispatch] = useReducer(reducer, mockFamily);
+  const [family, dispatch] = useReducer(reducer, emptyFamily());
+  const [hydrated, setHydrated] = useReducer(() => true, false);
 
-  const byId = useMemo(() => {
-    return {
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) dispatch({ type: "hydrate", family: JSON.parse(raw) as Family });
+    } catch {
+      /* corrupt or unavailable storage — start fresh rather than crash */
+    }
+    setHydrated();
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(family));
+    } catch {
+      /* private browsing — memories just won't survive the tab */
+    }
+  }, [family, hydrated]);
+
+  const byId = useMemo(
+    () => ({
       people: new Map(family.people.map((p) => [p.id, p])),
       places: new Map(family.places.map((p) => [p.id, p])),
       events: new Map(family.events.map((e) => [e.id, e])),
-    };
-  }, [family.people, family.places, family.events]);
+    }),
+    [family.people, family.places, family.events],
+  );
 
   const personById = useCallback((id: ID) => byId.people.get(id), [byId]);
   const placeById = useCallback((id?: ID) => (id ? byId.places.get(id) : undefined), [byId]);
@@ -127,6 +245,8 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
   const value = useMemo<FamilyContextValue>(
     () => ({
       family,
+      hydrated,
+      hasFamily: familyExists(family),
       personById,
       placeById,
       eventById,
@@ -135,12 +255,28 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       openGaps,
       nextGapFor,
       childrenOf,
+      createFamily: (name, founder) => dispatch({ type: "createFamily", name, founder }),
+      addPerson: (person, askPersonId, link) =>
+        dispatch({ type: "addPerson", person, askPersonId, link }),
+      addPlace: (place) => dispatch({ type: "addPlace", place }),
       addMemory: (memory) => dispatch({ type: "addMemory", memory }),
       resolveMemory: (id, events) => dispatch({ type: "resolveMemory", id, events }),
       answerGap: (gapId, memory) => dispatch({ type: "answerGap", gapId, memory }),
       skipGap: (gapId) => dispatch({ type: "skipGap", gapId }),
+      reset: () => dispatch({ type: "reset" }),
     }),
-    [family, personById, placeById, eventById, timelineFor, memoriesFor, openGaps, nextGapFor, childrenOf],
+    [
+      family,
+      hydrated,
+      personById,
+      placeById,
+      eventById,
+      timelineFor,
+      memoriesFor,
+      openGaps,
+      nextGapFor,
+      childrenOf,
+    ],
   );
 
   return <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>;

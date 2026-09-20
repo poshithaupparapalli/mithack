@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MemoryOrb } from "@/components/orb/memory-orb";
 import { MeshBackdrop } from "@/components/orb/mesh-backdrop";
-import { mockFamily } from "@/lib/mock-data";
+import { useFamily } from "@/lib/family-context";
 import { useSettings } from "@/lib/settings-context";
 
 const fadeUp = {
@@ -29,12 +29,12 @@ const HERO_ORBS = [
 
 export default function LandingPage() {
   const router = useRouter();
-  const { join } = useSettings();
+  const { family, hasFamily, hydrated } = useFamily();
+  const { isElderlyMode, currentUserId } = useSettings();
 
-  function createFamily() {
-    join({ elderly: false });
-    router.push("/home");
-  }
+  // Someone already started a family in this browser — offer it back to them
+  // rather than making them set one up twice.
+  const returning = hydrated && hasFamily && currentUserId !== "";
 
   return (
     <main className="relative flex min-h-dvh flex-col px-6 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] pt-[calc(env(safe-area-inset-top,0px)+3rem)]">
@@ -102,17 +102,34 @@ export default function LandingPage() {
           animate="show"
           className="mt-8 flex flex-col gap-3"
         >
-          <Button size="lg" onClick={createFamily} className="w-full justify-between rounded-2xl">
-            Start my family&apos;s Keepsake
-            <ArrowRight />
-          </Button>
-          <button
-            onClick={() => router.push(`/join/${mockFamily.inviteCode}`)}
-            className="glass flex min-h-14 w-full items-center justify-between rounded-2xl px-6 text-lg font-medium text-ink"
-          >
-            I have an invite link
-            <Link2 className="size-5" />
-          </button>
+          {returning ? (
+            <>
+              <Button
+                size="lg"
+                onClick={() => router.push(isElderlyMode ? "/elder" : "/home")}
+                className="w-full justify-between rounded-2xl"
+              >
+                <span className="truncate">Open {family.name}</span>
+                <ArrowRight />
+              </Button>
+              <button
+                onClick={() => router.push(`/join/${family.inviteCode}`)}
+                className="glass flex min-h-14 w-full items-center justify-between rounded-2xl px-6 text-lg font-medium text-ink"
+              >
+                Join as someone else
+                <Link2 className="size-5" />
+              </button>
+            </>
+          ) : (
+            <Button
+              size="lg"
+              onClick={() => router.push("/setup")}
+              className="w-full justify-between rounded-2xl"
+            >
+              Start my family&apos;s Keepsake
+              <ArrowRight />
+            </Button>
+          )}
         </motion.div>
 
         <motion.div
@@ -124,13 +141,13 @@ export default function LandingPage() {
         >
           <div className="glass rounded-3xl p-5">
             <p className="font-serif text-[1.05rem] leading-snug text-ink">
-              &ldquo;For sixty years I have had no pictures of that day. I remember the dress
-              though. I made it myself.&rdquo;
+              Record one story tonight. In a year you&apos;ll have something no one else in the
+              world has a copy of.
             </p>
             <div className="mt-3.5 flex items-center gap-2.5">
-              <MemoryOrb emotion="love" intensity={0.95} size={26} />
+              <MemoryOrb emotion="love" intensity={0.9} size={26} />
               <p className="text-sm text-ink-faint">
-                Rosa, 85 — recorded on her kitchen phone, no app to learn
+                Works on a kitchen phone. Nothing to learn, nothing to type.
               </p>
             </div>
           </div>

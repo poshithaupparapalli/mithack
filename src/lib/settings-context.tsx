@@ -9,7 +9,6 @@ import {
   useReducer,
   type ReactNode,
 } from "react";
-import { ELDER_ID, INITIATOR_ID } from "@/lib/mock-data";
 import type { ID } from "@/lib/types";
 
 const STORAGE_KEY = "keepsake.settings.v1";
@@ -17,7 +16,7 @@ const STORAGE_KEY = "keepsake.settings.v1";
 export interface SettingsState {
   /** The Long Lake switch. True = voice-first, no navigation, huge type. */
   isElderlyMode: boolean;
-  /** Who we are acting as. Real auth replaces this; the shape stays. */
+  /** Who we are acting as. Empty until someone starts or joins a family. */
   currentUserId: ID;
   /** False until someone creates or joins a family. Gates the landing page. */
   hasJoined: boolean;
@@ -27,7 +26,7 @@ export interface SettingsState {
 
 const initialState: SettingsState = {
   isElderlyMode: false,
-  currentUserId: INITIATOR_ID,
+  currentUserId: "",
   hasJoined: false,
   hydrated: false,
 };
@@ -64,10 +63,10 @@ function reducer(state: SettingsState, action: Action): SettingsState {
 interface SettingsContextValue extends SettingsState {
   setElderlyMode: (value: boolean) => void;
   setCurrentUser: (id: ID) => void;
-  join: (opts: { elderly: boolean; userId?: ID }) => void;
+  join: (opts: { elderly: boolean; userId: ID }) => void;
   reset: () => void;
-  /** Flip between the two demo personas in one tap. */
-  togglePersona: () => void;
+  /** Flip the current user between Standard and Elderly Mode. */
+  toggleMode: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -108,24 +107,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "setCurrentUser", id });
   }, []);
 
-  const join = useCallback(({ elderly, userId }: { elderly: boolean; userId?: ID }) => {
-    dispatch({
-      type: "join",
-      elderly,
-      userId: userId ?? (elderly ? ELDER_ID : INITIATOR_ID),
-    });
+  const join = useCallback(({ elderly, userId }: { elderly: boolean; userId: ID }) => {
+    dispatch({ type: "join", elderly, userId });
   }, []);
 
   const reset = useCallback(() => dispatch({ type: "reset" }), []);
 
-  const togglePersona = useCallback(() => {
-    const next = !state.isElderlyMode;
-    dispatch({ type: "join", elderly: next, userId: next ? ELDER_ID : INITIATOR_ID });
+  /** Flip the current user between the two experiences without leaving. */
+  const toggleMode = useCallback(() => {
+    dispatch({ type: "setElderlyMode", value: !state.isElderlyMode });
   }, [state.isElderlyMode]);
 
   const value = useMemo<SettingsContextValue>(
-    () => ({ ...state, setElderlyMode, setCurrentUser, join, reset, togglePersona }),
-    [state, setElderlyMode, setCurrentUser, join, reset, togglePersona],
+    () => ({ ...state, setElderlyMode, setCurrentUser, join, reset, toggleMode }),
+    [state, setElderlyMode, setCurrentUser, join, reset, toggleMode],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

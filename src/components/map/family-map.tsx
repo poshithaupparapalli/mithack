@@ -3,16 +3,20 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useMemo } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMapEvents } from "react-leaflet";
 import { useFamily } from "@/lib/family-context";
 import type { FamilyEvent, Person, Place } from "@/lib/types";
 import { formatPartialDate } from "@/lib/utils";
 
-function pinIcon(place: Place, count: number) {
-  const current = place.kind === "current";
-  const bg = current ? "var(--color-ember)" : "var(--color-surface)";
-  const fg = current ? "#ffffff" : "var(--color-ink-soft)";
-  const border = current ? "var(--color-ember)" : "var(--color-line-strong)";
+function pinIcon(kind: Place["kind"], count: number, pending = false) {
+  const current = kind === "current";
+  const bg = pending ? "var(--color-gap)" : current ? "var(--color-ember)" : "var(--color-surface)";
+  const fg = pending || current ? "#ffffff" : "var(--color-ink-soft)";
+  const border = pending
+    ? "var(--color-gap)"
+    : current
+      ? "var(--color-ember)"
+      : "var(--color-line-strong)";
 
   return L.divIcon({
     className: "keepsake-pin",
@@ -27,14 +31,32 @@ function pinIcon(place: Place, count: number) {
         border:2px solid ${border};
         box-shadow:0 2px 8px rgba(28,25,23,.22);
         font:600 13px/1 ui-sans-serif,system-ui,sans-serif;
-      ">${count || ""}</span>`,
+      ">${pending ? "?" : count || ""}</span>`,
   });
 }
 
-export default function FamilyMap() {
+/** Turns a tap on the map into a coordinate, only while we're expecting one. */
+function DropPin({ onPick }: { onPick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(event) {
+      onPick(event.latlng.lat, event.latlng.lng);
+    },
+  });
+  return null;
+}
+
+export default function FamilyMap({
+  picking = false,
+  draft = null,
+  onPick,
+}: {
+  picking?: boolean;
+  draft?: { lat: number; lng: number } | null;
+  onPick?: (lat: number, lng: number) => void;
+}) {
   const { family, placeById } = useFamily();
 
-  const { migration, dispersal, peopleAt, eventsAt } = useMemo(() => {
+  const { migration, dispersal, peopleAt, eventsAt, centre } = useMemo(() => {
     const migrationEvents = family.events
       .filter((e) => e.category === "migration" && e.placeId)
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -81,13 +103,21 @@ export default function FamilyMap() {
       eventsAt.set(event.placeId, list);
     }
 
-    return { migration, dispersal, peopleAt, eventsAt };
-  }, [family.events, family.people, placeById]);
+    // Open on the family's own places once there are any.
+    const centre: [number, number] = family.places.length
+      ? [
+          family.places.reduce((sum, p) => sum + p.lat, 0) / family.places.length,
+          family.places.reduce((sum, p) => sum + p.lng, 0) / family.places.length,
+        ]
+      : [25, -20];
+
+    return { migration, dispersal, peopleAt, eventsAt, centre };
+  }, [family.events, family.people, family.places, placeById]);
 
   return (
     <MapContainer
-      center={[29.5, -95]}
-      zoom={4}
+      center={centre}
+      zoom={family.places.length ? 4 : 2}
       scrollWheelZoom
       zoomControl={false}
       className="size-full"
@@ -97,7 +127,13 @@ export default function FamilyMap() {
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {/* The journey north — the family's founding migration. */}
+      {picking && onPick ? <DropPin onPick={onPick} /> : null}
+
+      {draft ? (
+        <Marker position={[draft.lat, draft.lng]} icon={pinIcon("historical", 0, true)} />
+      ) : null}
+
+      {/* The journey — whatever migrations the family has recorded, in order. */}
       {migration.length > 1 ? (
         <Polyline
           positions={migration.map((p) => [p.lat, p.lng] as [number, number])}
@@ -124,7 +160,7 @@ export default function FamilyMap() {
           <Marker
             key={place.id}
             position={[place.lat, place.lng]}
-            icon={pinIcon(place, residents.length)}
+            icon={pinIcon(place.kind, residents.length)}
           >
             <Popup>
               <span className="block font-serif text-[1.05rem] leading-tight text-ink">
@@ -136,7 +172,7 @@ export default function FamilyMap() {
                 </span>
               ) : (
                 <span className="mt-1 block text-[0.8rem] text-ink-faint">
-                  No one lives here any more
+                  {place.kind === "current" ? "No one here yet" : "No one lives here any more"}
                 </span>
               )}
               {events.length > 0 ? (

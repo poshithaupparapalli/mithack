@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { FamilyProvider } from "@/lib/family-context";
 import { SettingsProvider } from "@/lib/settings-context";
-import { PersonaSwitch } from "@/components/persona-switch";
+import { QuickSettings } from "@/components/quick-settings";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SettingsProvider>
           <FamilyProvider>
             {children}
-            <PersonaSwitch />
+            <QuickSettings />
           </FamilyProvider>
         </SettingsProvider>
       </body>

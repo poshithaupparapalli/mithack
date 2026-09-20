@@ -3,8 +3,8 @@
 Capture, organise and visualise family history using AI. Built for HackMIT 2026
 (Meta — *Bringing People Closer Together with AI*; Long Lake — *Convince a Non-Believer*).
 
-This repo is the **frontend**. It runs entirely on mock data, so it never blocks
-on the Muse pipeline.
+This repo is the **frontend**. It runs entirely on local state, so it never
+blocks on the Muse pipeline.
 
 ```bash
 npm install
@@ -13,31 +13,44 @@ npm run dev     # http://localhost:3000
 
 ---
 
+## It starts empty
+
+There is no sample family and no demo data. The first thing anyone sees is
+their own blank sky, and every person, place and memory in the app was put
+there by someone using it. Everything persists to `localStorage`, so a family's
+memories survive closing the tab.
+
+**First run:** `/` → *Start my family's Keepsake* → `/setup` asks three things
+(your name, the family's name, and which of the two experiences you want) →
+you land in an empty constellation with one unlit orb and a prompt to record.
+
+**Everything is created in-app:**
+
+| To add | Where | How |
+|---|---|---|
+| A memory | `/add` | Record, type, or drop files in |
+| A relative | `/tree` | *Add someone* — a name is the only required field; parent/child/partner links are applied to both sides and set the generation |
+| A place | `/map` | *Add a place*, then tap the map to drop a pin. No geocoding API, so nothing to key or rate-limit |
+| Another person on this device | `/join/[code]` | The invite fork, where Elderly Mode gets chosen |
+
+**Start over** is in the settings chip at bottom-left — it wipes the family and
+the settings and returns you to the landing page.
+
+---
+
 ## The two experiences
 
 | | Standard Mode | Elderly Mode |
 |---|---|---|
 | Route tree | `src/app/(app)/*` | `src/app/elder/*` |
-| Persona | Maya, the Initiator | Rosa, the Elder |
 | Navigation | Bottom nav: Home · Tree · Add · Map · Timeline | None. There is one button. |
 | Base type size | 14–16px | 22px floor, questions at 34px |
-| Entry point | Invite link → "Show me everything" | Invite link → "I'd rather just talk" |
+| Entry point | Setup/invite → "Show me everything" | Setup/invite → "I'd rather just talk" |
 
-Elderly Mode is a **separate route tree**, not conditional rendering. Each layout
-redirects anyone who lands in the wrong one, so navigation can never leak into
-the voice experience. The choice is made once, at the invite screen
-(`/join/[code]`), and persisted to `localStorage`.
-
-### Demo path
-
-1. `/` → **I have an invite link**
-2. Pick **I'd rather just talk** → lands in Elderly Mode, question read aloud
-3. Hold the button, answer, watch it get written down
-4. Tap the small chip at bottom-left → switch to **Maya** → the answer is now in
-   the family record
-
-The bottom-left chip (`src/components/persona-switch.tsx`) is a demo affordance,
-not a product feature. Delete it before anything ships.
+Elderly Mode is a **separate route tree**, not conditional rendering. Each
+layout redirects anyone who lands in the wrong one (and both send you to
+`/setup` if no family exists yet), so navigation can never leak into the voice
+experience.
 
 ---
 
@@ -65,11 +78,10 @@ force them into `Date`.
 
 Change this file first; TypeScript will point at every screen affected.
 
-Seed data lives in [`src/lib/mock-data.ts`](src/lib/mock-data.ts) — the
-Alvarez–Chen family, four generations, one 1968 migration, five open gaps.
-Replacing `mockFamily` with a fetch in
-[`src/lib/family-context.tsx`](src/lib/family-context.tsx) is the only change
-needed to go live.
+[`src/lib/family-context.tsx`](src/lib/family-context.tsx) holds the record and
+hydrates it from `localStorage`. Going live means replacing the two
+hydrate/persist effects with `fetch` and `PATCH`; every selector below them
+stays exactly as it is.
 
 ### 2. Speech-to-text — [`src/app/api/transcribe/route.ts`](src/app/api/transcribe/route.ts)
 
@@ -93,8 +105,12 @@ simulated take rather than dead-ending — see
 
 **Still stubbed on the frontend side**, if you'd rather own it:
 
+- **Gap generation** ([`src/lib/seed.ts`](src/lib/seed.ts)) is rule-based: five
+  opening questions that work when Keepsake knows nothing at all, plus one
+  auto-generated per person who lands on the tree without a story attached.
+  Real gap-finding over the graph is yours if you want it.
 - `useInterview` ([`src/lib/use-interview.ts`](src/lib/use-interview.ts)) picks
-  the next gap by `priority` and canned acknowledgements. Swap it for a Muse
+  the next gap by priority and uses canned acknowledgements. Swap it for a Muse
   Agent call and the chat UI and Elderly Mode both upgrade at once.
 - `/add` fakes event extraction with a `setTimeout` that calls
   `resolveMemory(id, events)`. Point that at the real pipeline response.
@@ -118,7 +134,8 @@ one visual idea the whole interface runs on, so it's worth not diluting:
   spiral ([`src/lib/constellation.ts`](src/lib/constellation.ts)) — even spacing
   with no collision pass, identical on server and client. Tap to open; tap a
   feeling in the legend to isolate it.
-- **A gap is an unlit orb.** Clear glass, no colour. Answering one lights it.
+- **A gap is an unlit orb.** Clear glass, no colour — the same treatment as the
+  empty state's single waiting orb. Answering one lights it.
 - **The mesh** ([`mesh-backdrop.tsx`](src/components/orb/mesh-backdrop.tsx)) is
   four very large CSS radial washes over parchment, tintable per screen. No
   image assets, so nothing to license and nothing to fail on a projector.
@@ -142,7 +159,7 @@ These are deliberate and worth not regressing:
 - `maximum-scale=5` — pinch-zoom is never disabled.
 - Focus rings are visible everywhere; `prefers-reduced-motion` is respected.
 - Elderly Mode never uses the words "AI", "transcribe", or "data". The question
-  comes from *Maya*, not from a model.
+  comes from whoever set the family up, not from a model.
 - The record button is an orb, not a microphone. At rest it's clear, unlit
   glass; her voice's amplitude feeds its intensity, so it warms as she speaks
   and blooms into its emotion when it saves. She never sees a waveform, a

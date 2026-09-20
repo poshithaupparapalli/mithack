@@ -9,7 +9,6 @@ import { MemoryOrb } from "@/components/orb/memory-orb";
 import { MeshBackdrop } from "@/components/orb/mesh-backdrop";
 import { emotionSpec } from "@/lib/emotions";
 import { useFamily } from "@/lib/family-context";
-import { INITIATOR_ID } from "@/lib/mock-data";
 import { useSettings } from "@/lib/settings-context";
 import { useInterview } from "@/lib/use-interview";
 import { useSpeech } from "@/lib/use-speech";
@@ -19,7 +18,7 @@ import type { Emotion } from "@/lib/types";
 type Stage = "asking" | "saving" | "saved" | "finished";
 
 export default function ElderHome() {
-  const { personById } = useFamily();
+  const { family, personById } = useFamily();
   const { currentUserId } = useSettings();
   const { currentGap, answer, skip } = useInterview();
   const { speak, speaking, supported: canSpeak } = useSpeech();
@@ -30,7 +29,10 @@ export default function ElderHome() {
   const [savedIntensity, setSavedIntensity] = useState(0.85);
 
   const me = personById(currentUserId);
-  const asker = personById(INITIATOR_ID);
+  // Whoever set the family up is the one "asking" — unless that's you, in
+  // which case no face is shown and the question simply arrives.
+  const founder = family.people[0];
+  const asker = founder && founder.id !== currentUserId ? founder : undefined;
   const firstName = me?.name.split(" ")[0] ?? "there";
 
   const voice = useVoiceCapture({

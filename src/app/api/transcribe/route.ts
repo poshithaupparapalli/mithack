@@ -17,19 +17,19 @@ import { NextResponse } from "next/server";
 
 const CANNED = [
   {
-    text: "It was my mother who decided, really. There was no work left after the drought, and her brother had gone to Chicago two years before and written to say come. Tomás did not want to leave her. He argued for a month. In the end she told him, you go, or I will never forgive you.",
-    emotion: "grief",
-    intensity: 0.85,
+    text: "She kept every letter anyone ever sent her, in a biscuit tin on top of the wardrobe. After she died we found forty years of them, in order, with the newest on top.",
+    emotion: "longing",
+    intensity: 0.82,
   },
   {
-    text: "The first thing I made was rice. Only rice, because that is what the corner store had at nine o'clock at night. We ate it standing up. Tomás said it was the best thing he ever tasted and he was lying, but I have never forgotten him saying it.",
+    text: "He worked nights for eleven years so he could pick us up from school. I only understood what that cost him after I had my own kids.",
+    emotion: "pride",
+    intensity: 0.9,
+  },
+  {
+    text: "We ate standing up in the kitchen because there was no table yet. He said it was the best thing he'd ever tasted and he was lying, but I've never forgotten him saying it.",
     emotion: "love",
     intensity: 0.92,
-  },
-  {
-    text: "That is my cousin Arturo. He came the year after us and slept on our floor for eleven months. He moved to Los Angeles in 1975 and we lost him.",
-    emotion: "longing",
-    intensity: 0.78,
   },
 ] as const;
 

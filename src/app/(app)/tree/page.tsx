@@ -11,10 +11,12 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Info } from "lucide-react";
+import { Info, UserPlus } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AddPersonSheet } from "@/components/tree/add-person-sheet";
 import { PersonNode, type PersonNodeData } from "@/components/tree/person-node";
 import { PersonPanel } from "@/components/tree/person-panel";
+import { Button } from "@/components/ui/button";
 import { useFamily } from "@/lib/family-context";
 import { useSettings } from "@/lib/settings-context";
 import { layoutFamily } from "@/lib/tree-layout";
@@ -26,6 +28,7 @@ function TreeCanvas() {
   const { family, openGaps, memoriesFor } = useFamily();
   const { currentUserId } = useSettings();
   const [selected, setSelected] = useState<ID | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const { nodes, edges } = useMemo(() => {
     const laidOut = layoutFamily(family.people);
@@ -132,13 +135,42 @@ function TreeCanvas() {
           />
         </ReactFlow>
 
-        <div className="glass pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-ink-faint">
-          <Info className="size-3.5" />
-          Tap anyone to open their story
-        </div>
+        {family.people.length > 1 ? (
+          <div className="glass pointer-events-none absolute left-4 top-4 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-ink-faint">
+            <Info className="size-3.5" />
+            Tap anyone to open their story
+          </div>
+        ) : (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-8">
+            <div className="glass pointer-events-auto max-w-xs rounded-3xl p-6 text-center">
+              <p className="font-serif text-[1.35rem] leading-snug text-ink">
+                It&apos;s just you up here.
+              </p>
+              <p className="mt-2 text-[0.94rem] leading-relaxed text-ink-soft">
+                Add the people you want remembered — a grandparent, a parent, someone who is no
+                longer here. A name is enough to start.
+              </p>
+              <Button size="md" className="mt-5 w-full rounded-2xl" onClick={() => setAdding(true)}>
+                <UserPlus className="size-[18px]" />
+                Add someone
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {family.people.length > 1 ? (
+          <button
+            onClick={() => setAdding(true)}
+            aria-label="Add someone to the tree"
+            className="absolute bottom-4 left-4 flex size-12 items-center justify-center rounded-2xl bg-ember text-white shadow-lg shadow-ember/25 transition-transform active:scale-95"
+          >
+            <UserPlus className="size-5" />
+          </button>
+        ) : null}
       </div>
 
       <PersonPanel personId={selected} onOpenChange={(open) => !open && setSelected(null)} />
+      <AddPersonSheet open={adding} onOpenChange={setAdding} />
     </>
   );
 }

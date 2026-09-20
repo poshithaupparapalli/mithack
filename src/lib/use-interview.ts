@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useFamily } from "@/lib/family-context";
 import { useSettings } from "@/lib/settings-context";
-import { seedChat } from "@/lib/mock-data";
+import { newId, welcomeChat } from "@/lib/seed";
 import type { ChatMessage, Emotion, Memory } from "@/lib/types";
 
 /**
@@ -27,14 +27,29 @@ const HANDOFFS = [
   "While I have you — one last question.",
 ];
 
-let counter = 0;
-const nextId = () => `c-live-${(counter += 1)}`;
+const nextId = () => newId("c");
 
 export function useInterview() {
   const { openGaps, answerGap, skipGap, personById } = useFamily();
   const { currentUserId } = useSettings();
 
-  const [messages, setMessages] = useState<ChatMessage[]>(seedChat);
+  // Built once, on mount, from whatever the family already knows. Both
+  // layouts wait for hydration before rendering, so the gaps are real by now.
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const me = personById(currentUserId);
+    const first = openGaps[0];
+    const thread = welcomeChat(me?.name.split(" ")[0] ?? "there");
+    if (first) {
+      thread.push({
+        id: newId("c"),
+        role: "agent",
+        text: first.question,
+        gapId: first.id,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    return thread;
+  });
   const [thinking, setThinking] = useState(false);
   const timers = useRef<number[]>([]);
 

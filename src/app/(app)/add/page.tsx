@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, FileText, ImageIcon, Loader2, MapPin, UploadCloud, X } from "lucide-react";
+import { Check, FileText, ImageIcon, Loader2, MapPin, MapPinPlus, UploadCloud, UserPlus, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type DragEvent } from "react";
 import { Avatar } from "@/components/ui/avatar";
@@ -177,6 +178,17 @@ export default function AddMemoryPage() {
 
       <section className="mt-7">
         <h2 className="text-sm font-semibold text-ink">Who is in this memory?</h2>
+        {family.people.length <= 1 ? (
+          <Link
+            href="/tree"
+            className="glass-solid mt-2.5 flex items-center gap-2.5 rounded-xl px-3.5 py-3 text-sm text-ink-soft"
+          >
+            <UserPlus className="size-4 shrink-0 text-ink-faint" />
+            <span className="flex-1">
+              Only you are on the tree so far. Add the people this is about.
+            </span>
+          </Link>
+        ) : null}
         <div className="-mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4 pb-1">
           {family.people.map((person) => {
             const active = people.includes(person.id);
@@ -212,6 +224,15 @@ export default function AddMemoryPage() {
 
       <section className="mt-6">
         <h2 className="text-sm font-semibold text-ink">Where was this?</h2>
+        {family.places.length === 0 ? (
+          <Link
+            href="/map"
+            className="glass-solid mt-2.5 flex items-center gap-2.5 rounded-xl px-3.5 py-3 text-sm text-ink-soft"
+          >
+            <MapPinPlus className="size-4 shrink-0 text-ink-faint" />
+            <span className="flex-1">No places yet — drop a pin on the map to add one.</span>
+          </Link>
+        ) : null}
         <div className="mt-2.5 flex flex-wrap gap-2">
           {family.places.map((place) => {
             const active = place.id === placeId;

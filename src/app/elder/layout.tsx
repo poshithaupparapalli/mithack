@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useFamily } from "@/lib/family-context";
 import { useSettings } from "@/lib/settings-context";
 
 /**
@@ -10,13 +11,17 @@ import { useSettings } from "@/lib/settings-context";
  */
 export default function ElderLayout({ children }: { children: React.ReactNode }) {
   const { isElderlyMode, hydrated } = useSettings();
+  const { hasFamily, hydrated: familyReady } = useFamily();
   const router = useRouter();
+  const ready = hydrated && familyReady;
 
   useEffect(() => {
-    if (hydrated && !isElderlyMode) router.replace("/home");
-  }, [hydrated, isElderlyMode, router]);
+    if (!ready) return;
+    if (!hasFamily) router.replace("/setup");
+    else if (!isElderlyMode) router.replace("/home");
+  }, [hasFamily, isElderlyMode, ready, router]);
 
-  if (!hydrated) return <div className="min-h-dvh bg-canvas" aria-hidden />;
+  if (!ready || !hasFamily) return <div className="min-h-dvh bg-canvas" aria-hidden />;
 
   return (
     <div
